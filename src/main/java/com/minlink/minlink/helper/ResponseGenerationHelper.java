@@ -12,20 +12,35 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import static com.minlink.minlink.constants.Constants.ACTIVATED_CONSTANT;
+import static com.minlink.minlink.constants.Constants.DEACTIVATED_CONSTANT;
+import static com.minlink.minlink.constants.Constants.DOMAIN_PREFIX;
+import static com.minlink.minlink.constants.Constants.ERROR_CONSTANT;
+import static com.minlink.minlink.constants.Constants.INVALID_CREDENTIALS_RECEIVED;
+import static com.minlink.minlink.constants.Constants.LOGIN;
+import static com.minlink.minlink.constants.Constants.MESSAGE_CONSTANT;
+import static com.minlink.minlink.constants.Constants.INTERNAL_ERROR_MESSAGE;
+import static com.minlink.minlink.constants.Constants.SHORT_URL;
+import static com.minlink.minlink.constants.Constants.SHORT_URL_NOT_FOUND;
+import static com.minlink.minlink.constants.Constants.UNAUTHORISED_REQUEST;
+import static com.minlink.minlink.constants.Constants.URLS_CONSTANT;
+import static com.minlink.minlink.constants.Constants.URL_CONSTANT;
+import static com.minlink.minlink.constants.Constants.URL_IS_ALREADY;
+import static com.minlink.minlink.constants.Constants.USER_NOT_FOUND_FOR_THE_GIVEN_ID;
+
 public class ResponseGenerationHelper {
 
-    private static final String DOMAIN_PREFIX = "http://localhost:8080/";
 
     public static ResponseEntity<Map<String, Object>> handleAuth(OAuth2User principal) {
         Map<String, Object> response = new HashMap<>();
         if (principal == null) {
-            response.put("error", "unauthorised request");
+            response.put(ERROR_CONSTANT, UNAUTHORISED_REQUEST);
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(response);
         }
-        String userId = principal.getAttribute("login");
+        String userId = principal.getAttribute(LOGIN);
         if (!StringUtils.hasText(userId)) {
-            response.put("error", "invalid credentials received");
+            response.put(ERROR_CONSTANT, INVALID_CREDENTIALS_RECEIVED);
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(response);
         }
@@ -34,7 +49,7 @@ public class ResponseGenerationHelper {
 
     public static ResponseEntity<Map<String, Object>> userNotFoundError() {
         Map<String, Object> response = new HashMap<>();
-        response.put("error", "user not found for the given id");
+        response.put(ERROR_CONSTANT, USER_NOT_FOUND_FOR_THE_GIVEN_ID);
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                 .body(response);
     }
@@ -44,31 +59,37 @@ public class ResponseGenerationHelper {
         List<UrlResponse> urlResponse = urlsOfUser.stream()
                 .map(Url::getUrlResponse)
                 .collect(Collectors.toList());
-        response.put("urls", urlResponse);
+        response.put(URLS_CONSTANT, urlResponse);
         return ResponseEntity.ok(response);
     }
 
     public static ResponseEntity<Map<String, Object>> exceptionResponse() {
         Map<String, Object> response = new HashMap<>();
-        response.put("error", "ran into an issue while processing the request, please contact system administrator");
+        response.put(ERROR_CONSTANT, INTERNAL_ERROR_MESSAGE);
         return ResponseEntity.internalServerError().body(response);
     }
 
     public static ResponseEntity<Map<String, Object>> successResponse(boolean deactivateRequest) {
         Map<String, Object> response = new HashMap<>();
-        response.put("message", "Url " + (deactivateRequest ? "deactivated" : "activated"));
+        response.put(MESSAGE_CONSTANT, URL_CONSTANT + (deactivateRequest ? DEACTIVATED_CONSTANT : ACTIVATED_CONSTANT));
         return ResponseEntity.ok(response);
     }
 
     public static ResponseEntity<Map<String, Object>> getMapResponseEntity(Url url) {
         Map<String, Object> response = new HashMap<>();
-        response.put("shortUrl", DOMAIN_PREFIX + url.getShortUrl());
+        response.put(SHORT_URL, DOMAIN_PREFIX + url.getShortUrl());
         return ResponseEntity.ok(response);
     }
 
     public static ResponseEntity<Map<String, Object>> nonUpdateResponse(boolean deactivateRequest) {
         Map<String, Object> response = new HashMap<>();
-        response.put("message", "Url is already " + (deactivateRequest ? "deactivated" : "activated"));
+        response.put(MESSAGE_CONSTANT, URL_IS_ALREADY + (deactivateRequest ? DEACTIVATED_CONSTANT : ACTIVATED_CONSTANT));
         return ResponseEntity.status(HttpStatus.NOT_MODIFIED).body(response);
+    }
+
+    public static ResponseEntity<Map<String, Object>> shortUrlNotFoundResponse() {
+        Map<String, Object> response = new HashMap<>();
+        response.put(MESSAGE_CONSTANT, SHORT_URL_NOT_FOUND);
+        return ResponseEntity.badRequest().body(response);
     }
 }

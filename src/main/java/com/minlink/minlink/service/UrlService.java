@@ -11,6 +11,9 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 
+import static com.minlink.minlink.constants.Constants.HIT_COUNT;
+import static com.minlink.minlink.constants.Constants.SHORT_URL;
+
 @Service
 public class UrlService {
 
@@ -37,8 +40,8 @@ public class UrlService {
     }
 
     public void increaseHitCount(String shortUrl) {
-        Query query = new Query(Criteria.where("shortUrl").is(shortUrl));
-        Update update = new Update().inc("hitCount", 1);
+        Query query = new Query(Criteria.where(SHORT_URL).is(shortUrl));
+        Update update = new Update().inc(HIT_COUNT, 1);
         mongoTemplate.updateFirst(query, update, Url.class);
     }
 
